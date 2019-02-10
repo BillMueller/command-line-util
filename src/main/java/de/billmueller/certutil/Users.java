@@ -1,12 +1,11 @@
 package de.billmueller.certutil;
 
 import java.io.*;
-import java.util.List;
 
 public class Users {
     private String name, password, defaultDirectory;
     private int defaultStyle;
-    private List<String> userdata;
+    private String permissionFile;
 
     public boolean setUser(Main main, String userName) {
         try (LineNumberReader rdr = new LineNumberReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("users.txt")))) {
@@ -18,7 +17,7 @@ public class Users {
                         password = rdr.readLine();
                         defaultDirectory = rdr.readLine();
                         defaultStyle = Integer.parseInt(rdr.readLine());
-
+                        permissionFile = (currentLine = rdr.readLine()).equals("default") ? null : currentLine;
                     }
                 }
             }
@@ -44,5 +43,9 @@ public class Users {
 
     public int getDefaultStyle() {
         return defaultStyle;
+    }
+    
+    public String getPermissionFile() {
+    	return permissionFile;
     }
 }

@@ -163,8 +163,7 @@ public class TestCertUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("src/test/resources/testFile.txt"));
+        try(BufferedReader br = new BufferedReader(new FileReader("src/test/resources/testFile.txt"))){
             assert br.readLine().equals("A test message");
         } catch (Exception e) {
             e.printStackTrace();
