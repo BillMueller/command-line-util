@@ -22,8 +22,7 @@ public class Main {
 	private String permissionFile;
 	private String username;
 
-	@Parameter(names = { "setConfig",
-			"sc" }, description = "copies the config.properties file to a custom file and sets it as default config file")
+	@Parameter(names = { "setConfig","sc" }, description = "sets the used config file to a new directory")
 	private boolean setConfig;
 	@Parameter(names = { "writeCertificate", "wc" }, description = "generate a new certificate")
 	private boolean writeC;
@@ -45,10 +44,12 @@ public class Main {
 	private boolean dt;
 	@Parameter(names = { "changeStyle", "cs" }, description = "changes between colored and non-colored mode")
 	private boolean cs;
-	@Parameter(names = { "note", "n" }, description = "makes a note (if you have permission)")
+	@Parameter(names = "note", description = "makes a note (if you have permission)")
 	private boolean note;
 	@Parameter(names = { "searchNote", "sn" }, description = "makes a note (if you have permission)")
 	private boolean searchNote;
+	@Parameter(names = "alarm", description = "creates an alarm for the time entered")
+	private boolean alarm;
 
 	@Parameter(names = { "--issuerName", "--iName" }, description = "eneter the ca name")
 	private String iName;
@@ -88,6 +89,8 @@ public class Main {
 	private boolean styleToggle;
 	@Parameter(names = "--replace")
 	private boolean replace;
+	@Parameter(names = "--time")
+	private int time;
 
 	/**
 	 * Main function with the J-console input functionality <br>
@@ -285,6 +288,7 @@ public class Main {
 		setConfig = false;
 		note = false;
 		searchNote = false;
+		alarm = false;
 		// -------+
 		iName = null;
 		sName = null;
@@ -305,6 +309,7 @@ public class Main {
 		cStyle = null;
 		styleToggle = false;
 		replace = false;
+		time = 0;
 	}
 
 	// -----------+
@@ -1018,6 +1023,8 @@ public class Main {
 			callMakeNote(main);
 		else if (searchNote)
 			callSearchNote(main);
+		else if (alarm)
+			callAlarm(main);
 	}
 
 	public void exitConsole(Main main) {
@@ -1060,5 +1067,9 @@ public class Main {
 				}
 			}
 		}
+	}
+	
+	private void callAlarm(Main main) {
+		new Thread(new Alarm()).start();;
 	}
 }
