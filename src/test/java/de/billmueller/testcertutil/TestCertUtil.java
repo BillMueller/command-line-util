@@ -122,7 +122,7 @@ public class TestCertUtil {
     private void testReadProperties(Main main) {
         main.printInfo("Testing getPropertiesFile() function");
         try {
-            assert !main.getPropertiesFile("config.properties", false, true).isEmpty();
+            assert !main.getPropertiesFile(main, "config.properties", false, true).isEmpty();
         } catch (IOException ioe) {
         	ioe.printStackTrace();
         }

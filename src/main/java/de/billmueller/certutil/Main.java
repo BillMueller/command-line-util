@@ -15,12 +15,15 @@ public class Main {
 	private String ANSI_HELP = "\u001B[92m";
 	private String ANSI_INPUT = "\u001B[93m";
 	private String ANSI_OUTPUT = "\u001B[94m";
+	private String ANSI_DEBUG = "\u001B[36m";
 
 	public int style = 0;
+	public boolean debug = false;
 	private String pFile;
 	private String configFile = "default";
 	private String permissionFile;
 	private String username;
+	public String usersFile = "default";
 
 	@Parameter(names = { "setConfig","sc" }, description = "sets the used config file to a new directory")
 	private boolean setConfig;
@@ -50,6 +53,8 @@ public class Main {
 	private boolean searchNote;
 	@Parameter(names = "alarm", description = "creates an alarm for the time entered")
 	private boolean alarm;
+	@Parameter(names = {"toggleDebug", "debug", "tD"}, description = "changes between debug and normal mode")
+	private boolean toggleDebug;
 
 	@Parameter(names = { "--issuerName", "--iName" }, description = "eneter the ca name")
 	private String iName;
@@ -111,23 +116,30 @@ public class Main {
 		main.cd = true;
 
 		while (!main.exit) {
+			main.printDebug("Starting input function");
 			if (main.cd) {
+				main.printDebug("Starting change Directory process");
 				start = false;
 				while (!start) {
+					main.printDebug("Starting change Directoy loop");
 					main.printEditor("Enter directory");
 					in = sc.nextLine();
 					if (in.split("/")[0].length() == 2) {
+						main.printDebug("The directory passed the easy validity test...");
 						main.pFile = in;
 						start = true;
 					} else if (!in.equals("exit") && !in.equals("login")) {
+						main.printDebug("The length of the first thing before the / is not 2 (it is " + in.split("/")[0].length() + ")");
 						main.printError("the path file you entered is not valid.");
 						main.printInfo("Use '/' for example C:/Users");
 					} else if (in.equals("exit")) {
 						exitConsole(main);
 					} else {
+						main.printDebug("Starting the login process");
 						Users user = new Users();
 						main.printEditor("Enter Username");
 						boolean login = user.setUser(main, in = sc.nextLine());
+						main.printDebug("Checking username validity...");
 						while (login) {
 							if (in.equals("exit")) {
 								main.printInfo("exiting ...");
@@ -137,6 +149,7 @@ public class Main {
 							main.printEditor("Enter Username");
 							login = user.setUser(main, in = sc.nextLine());
 						}
+						main.printDebug("Starting password input process");
 						Console console = System.console();
 						while (!user.getPassword()
 								.equals(in = main.style > 2
@@ -149,12 +162,16 @@ public class Main {
 							}
 							main.printError("The password you've entered isn't valid");
 						}
+						main.printDebug("Setting the default values for the user");
 						main.cd = false;
 						main.permissionFile = user.getPermissionFile();
 						start = true;
 						main.pFile = user.getDefaultDirectory();
 						main.style = user.getDefaultStyle();
 						main.printInfo("Welcome " + (main.username = user.getName()));
+						main.printDebug("Permissions File "+ main.permissionFile);
+						main.printDebug("Default Directory " + main.pFile);
+						main.printDebug("Default Style: " + main.style);
 					}
 				}
 			}
@@ -165,10 +182,12 @@ public class Main {
 			sin = in.split(" ");
 			if (sin.length != 0 && !in.equals("")) {
 				try {
+					main.printDebug("Starting parse with JCommander");
 					jc = JCommander.newBuilder().addObject(main).build();
 					jc.parse(sin);
 					main.run(main);
 				} catch (com.beust.jcommander.ParameterException pe) {
+					main.printDebug("Error: " + pe.getMessage());
 					main.printError("unknown command or parameters");
 					main.exit = false;
 					main.cd = false;
@@ -176,6 +195,7 @@ public class Main {
 			}
 		}
 		sc.close();
+		main.printDebug("Scanner closed");
 		exitConsole(main);
 	}
 
@@ -186,16 +206,19 @@ public class Main {
 	 */
 	private void run(Main main) {
 		if (gHelp || help) {
+			main.printDebug("calling help");
 			callHelp(main);
 		} else {
 			if (!main.exit) {
 				if (cd) {
+					main.printDebug("calling change Direcotry");
 					main.cd = true;
 				} else if (cs) {
-					callChangeStyle();
+					main.printDebug("calling change Style");
+					callChangeStyle(main);
 				} else {
 					String defaultConfigFileName = "config.properties";
-					Properties dProps = callGetPropertiesFile(defaultConfigFileName);
+					Properties dProps = callGetPropertiesFile(main, defaultConfigFileName);
 
 					List<String> props = getPropertiesData(dProps);
 
@@ -215,7 +238,8 @@ public class Main {
 
 					Date dStDate = setDefaultPropertiesDates(dPropsStDate, 0);
 					Date dExDate = setDefaultPropertiesDates(dPropsExDate, milSecValid);
-
+					
+					main.printDebug("starting command calling function");
 					callCommands(main, dIssuerName, dSubjectName, dStDate, dExDate, dKeys, dSerNumber, dSignAlg);
 				}
 
@@ -236,13 +260,13 @@ public class Main {
 	 * @return object of the type Properties (with object.getProperty(property) you
 	 *         can get the value for the property
 	 */
-	public Properties getPropertiesFile(String configFileName, boolean printMsg, boolean defaultPath)
+	public Properties getPropertiesFile(Main main, String configFileName, boolean printMsg, boolean defaultPath)
 			throws IOException {
 		if (printMsg)
 			if (defaultPath)
-				printInfo("loading config.properties");
+				main.printDebug("loading config.properties");
 			else
-				printInfo("loading " + configFileName);
+				main.printDebug("loading " + configFileName);
 		Properties prop = new Properties();
 
 		if (defaultPath) {
@@ -252,18 +276,16 @@ public class Main {
 				else
 					throw new IOException();
 				if (printMsg)
-					printInfo("successfully loaded settings from " + configFileName);
-
+					main.printDebug("successfully loaded settings from " + configFileName);
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				main.printDebug("IOExeption:");
+				main.printDebug(ex.getMessage());
 			}
 		} else {
 			try (InputStream input = new FileInputStream(configFileName)) {
 				if (input != null)
 					prop.load(input);
-
-				printInfo("successfully loaded settings from " + configFileName);
-
+				main.printDebug("successfully loaded settings from " + configFileName);
 			} catch (IOException ex) {
 				if (printMsg) {
 					throw new IOException("");
@@ -289,6 +311,7 @@ public class Main {
 		note = false;
 		searchNote = false;
 		alarm = false;
+		toggleDebug = false;
 		// -------+
 		iName = null;
 		sName = null;
@@ -311,8 +334,6 @@ public class Main {
 		replace = false;
 		time = 0;
 	}
-
-	// -----------+
 
 	/**
 	 * Prints the message with a blue [INFO] in front of it
@@ -344,6 +365,24 @@ public class Main {
 			System.out.println("[" + ANSI_ERROR + "E" + ANSI_RESET + "] " + msg);
 		else
 			System.out.println("[" + ANSI_ERROR + "-" + ANSI_RESET + "] " + msg);
+	}
+	
+	/**
+	 * Prints the message with a red [DEBUG] in front of it if debug = true
+	 *
+	 * @param msg the message after the [DEBUG]
+	 */
+	public void printDebug(String msg) {
+		if(debug) {
+		if (style == 0 || style == 2)
+			System.out.println("[" + ANSI_DEBUG + "DEBUG" + ANSI_RESET + "] " + msg);
+		else if (style == 1)
+			System.out.println("[ERROR] " + msg);
+		else if (style == 3)
+			System.out.println("[" + ANSI_DEBUG + "D" + ANSI_RESET + "] " + msg);
+		else
+			System.out.println("[" + ANSI_DEBUG + "#" + ANSI_RESET + "] " + msg);
+		}
 	}
 
 	/**
@@ -480,14 +519,14 @@ public class Main {
 	/**
 	 * calls the functions needed when the "setConfig" command is executed
 	 */
-	private void callSetConfig() {
+	private void callSetConfig(Main main) {
 		if (directoryName == null)
 			printError(
 					"you have to enter a directory path where your want the new config file to be with the argument --directory <filename>");
 		else {
-			setConfig(directoryName + "/config.properties");
+			setConfig(main, directoryName + "/config.properties");
 			if (copyConfig) {
-				copyConfigFile(directoryName + "/config.properties");
+				copyConfigFile(main, directoryName + "/config.properties");
 			}
 		}
 	}
@@ -497,8 +536,11 @@ public class Main {
 	 *
 	 * @param targetDirectory target directory to set the config File to
 	 */
-	private void setConfig(String targetDirectory) {
+	private void setConfig(Main main, String targetDirectory) {
+		main.printDebug("setting new config file");
+		main.printDebug("old config file: " + configFile);
 		configFile = targetDirectory;
+		main.printDebug("new config file: " + configFile);
 	}
 
 	/**
@@ -506,16 +548,18 @@ public class Main {
 	 *
 	 * @param targetDirectory directory to copy the current config file to
 	 */
-	private void copyConfigFile(String targetDirectory) {
+	private void copyConfigFile(Main main, String targetDirectory) {
 		Properties prop;
+		main.printDebug("copying the config file");
 		try {
-			prop = getPropertiesFile("config.properties", false, true);
+			prop = getPropertiesFile(main, "config.properties", false, true);
 			prop.store(new FileOutputStream(targetDirectory),
 					"#'default' can be used for: defaultExDate, defaultSerialNumber, defaultValidity, defaultStDate");
-			printInfo("successfully copied the config.properties file");
+			main.printInfo("successfully copied the config.properties file");
 		} catch (IOException ioe) {
-			printError("default config file couldn't be found");
-			printError("copy failed");
+			main.printError("default config file couldn't be found");
+			main.printError("copy failed");
+			main.printDebug(ioe.getMessage());
 		}
 
 	}
@@ -523,21 +567,24 @@ public class Main {
 	/**
 	 * Calls all functions needed when the "changeStyle" command is executed
 	 */
-	private void callChangeStyle() {
+	private void callChangeStyle(Main main) {
+		main.printDebug("changing the style");
+		main.printDebug("Old style: " + style);
 		if (styleToggle) {
 			toggleStyle();
 		} else if (cStyle == null || cStyle.equals("default") || cStyle.equals("d")) {
-			style = 0;
+			main.printDebug("new style: " + cStyle + "/" + (style = 0));
 		} else if (cStyle.equals("non-colored") || cStyle.equals("nc")) {
-			style = 1;
+			main.printDebug("new style: " + cStyle + "/" + (style = 1));
 		} else if (cStyle.equals("one-colored") || cStyle.equals("oc")) {
-			style = 2;
+			main.printDebug("new style: " + cStyle + "/" + (style = 2));
 		} else if (cStyle.equals("one-lettered") || cStyle.equals("ol")) {
-			style = 3;
+			main.printDebug("new style: " + cStyle + "/" + (style = 3));
 		} else if (cStyle.equals("simple") || cStyle.equals("s")) {
-			style = 4;
+			main.printDebug("new style: " + cStyle + "/" + (style = 4));
 		} else {
 			printError("the style " + cStyle + " doesn't exist");
+			printDebug("the style entered was " + cStyle);
 		}
 
 		setMessageColor();
@@ -560,10 +607,12 @@ public class Main {
 			ANSI_ERROR = ANSI_INPUT;
 			ANSI_HELP = ANSI_INPUT;
 			ANSI_OUTPUT = ANSI_INPUT;
+			ANSI_DEBUG = ANSI_INPUT;
 		} else {
 			ANSI_ERROR = "\u001B[91m";
 			ANSI_HELP = "\u001B[92m";
 			ANSI_OUTPUT = "\u001B[94m";
+			ANSI_DEBUG = "\u001B[36m";
 		}
 	}
 
@@ -926,22 +975,22 @@ public class Main {
 	 * @return properties of the properties file (new Properties() if the file
 	 *         couldn't be found)
 	 */
-	private Properties callGetPropertiesFile(String defaultConfigFileName) {
+	private Properties callGetPropertiesFile(Main main, String defaultConfigFileName) {
 		if (!configFile.equals("default")) {
 			try {
-				return getPropertiesFile(configFile, true, false);
+				return getPropertiesFile(main, configFile, true, false);
 			} catch (IOException ioe) {
-				printError("no file could be found at " + defaultConfigFileName);
-				printInfo("the name of the config file must be config.properties");
-				printInfo("using default config.properties file");
+				main.printError("no file could be found at " + defaultConfigFileName);
+				main.printInfo("the name of the config file must be config.properties");
+				main.printInfo("using default config.properties file");
 				return new Properties();
 			}
 		} else {
 			try {
-				return getPropertiesFile(defaultConfigFileName, true, true);
+				return getPropertiesFile(main, defaultConfigFileName, true, true);
 			} catch (IOException e) {
-				printError("default config file couldn't be found");
-				printInfo("using default configs");
+				main.printError("default config file couldn't be found");
+				main.printInfo("using default configs");
 				return new Properties();
 			}
 		}
@@ -1018,13 +1067,15 @@ public class Main {
 		else if (dt)
 			callDecodeDocument(main);
 		else if (setConfig)
-			callSetConfig();
+			callSetConfig(main);
 		else if (note)
 			callMakeNote(main);
 		else if (searchNote)
 			callSearchNote(main);
 		else if (alarm)
 			callAlarm(main);
+		else if (toggleDebug)
+			toggleDebug();
 	}
 
 	public void exitConsole(Main main) {
@@ -1070,6 +1121,34 @@ public class Main {
 	}
 	
 	private void callAlarm(Main main) {
-		new Thread(new Alarm()).start();;
+		new Thread(new Alarm(main)).start();;
 	}
+	
+	private void toggleDebug() {
+		debug = !debug;
+	}
+	
+//	TODO - do this stuff dude
+//	
+//	public List<String> getSubInput(String message, Main main, int mode, boolean freeLineallowed) {
+//		int c = 1, exit = 0;
+//		List<String> output = new ArrayList<>();
+//		Scanner sc = new Scanner(System.in);
+//        String in;
+//		while ((freeLineallowed ? 2 : 1) > exit) {
+//            main.printEditorInput(c + 1, 1);
+//            in = sc.nextLine();
+//            if (in.equals("") || in.split(" ").length == 0)
+//                exit++;
+//            else {
+//                if (exit == 1) {
+//                    exit = 0;
+//                    output.add("");
+//                }
+//                bw.write(in);
+//                bw.newLine();
+//            }
+//            c++;
+//        }
+//	}
 }
