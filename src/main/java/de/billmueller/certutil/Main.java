@@ -25,7 +25,7 @@ public class Main {
 	private String username;
 	public String usersFile = "default";
 
-	@Parameter(names = { "setConfig","sc" }, description = "sets the used config file to a new directory")
+	@Parameter(names = { "setConfig", "sc" }, description = "sets the used config file to a new directory")
 	private boolean setConfig;
 	@Parameter(names = { "writeCertificate", "wc" }, description = "generate a new certificate")
 	private boolean writeC;
@@ -53,7 +53,7 @@ public class Main {
 	private boolean searchNote;
 	@Parameter(names = "alarm", description = "creates an alarm for the time entered")
 	private boolean alarm;
-	@Parameter(names = {"toggleDebug", "debug", "tD"}, description = "changes between debug and normal mode")
+	@Parameter(names = { "toggleDebug", "debug", "tD" }, description = "changes between debug and normal mode")
 	private boolean toggleDebug;
 
 	@Parameter(names = { "--issuerName", "--iName" }, description = "eneter the ca name")
@@ -129,7 +129,8 @@ public class Main {
 						main.pFile = in;
 						start = true;
 					} else if (!in.equals("exit") && !in.equals("login")) {
-						main.printDebug("The length of the first thing before the / is not 2 (it is " + in.split("/")[0].length() + ")");
+						main.printDebug("The length of the first thing before the / is not 2 (it is "
+								+ in.split("/")[0].length() + ")");
 						main.printError("the path file you entered is not valid.");
 						main.printInfo("Use '/' for example C:/Users");
 					} else if (in.equals("exit")) {
@@ -169,7 +170,7 @@ public class Main {
 						main.pFile = user.getDefaultDirectory();
 						main.style = user.getDefaultStyle();
 						main.printInfo("Welcome " + (main.username = user.getName()));
-						main.printDebug("Permissions File "+ main.permissionFile);
+						main.printDebug("Permissions File " + main.permissionFile);
 						main.printDebug("Default Directory " + main.pFile);
 						main.printDebug("Default Style: " + main.style);
 					}
@@ -238,7 +239,7 @@ public class Main {
 
 					Date dStDate = setDefaultPropertiesDates(dPropsStDate, 0);
 					Date dExDate = setDefaultPropertiesDates(dPropsExDate, milSecValid);
-					
+
 					main.printDebug("starting command calling function");
 					callCommands(main, dIssuerName, dSubjectName, dStDate, dExDate, dKeys, dSerNumber, dSignAlg);
 				}
@@ -366,22 +367,22 @@ public class Main {
 		else
 			System.out.println("[" + ANSI_ERROR + "-" + ANSI_RESET + "] " + msg);
 	}
-	
+
 	/**
 	 * Prints the message with a red [DEBUG] in front of it if debug = true
 	 *
 	 * @param msg the message after the [DEBUG]
 	 */
 	public void printDebug(String msg) {
-		if(debug) {
-		if (style == 0 || style == 2)
-			System.out.println("[" + ANSI_DEBUG + "DEBUG" + ANSI_RESET + "] " + msg);
-		else if (style == 1)
-			System.out.println("[ERROR] " + msg);
-		else if (style == 3)
-			System.out.println("[" + ANSI_DEBUG + "D" + ANSI_RESET + "] " + msg);
-		else
-			System.out.println("[" + ANSI_DEBUG + "#" + ANSI_RESET + "] " + msg);
+		if (debug) {
+			if (style == 0 || style == 2)
+				System.out.println("[" + ANSI_DEBUG + "DEBUG" + ANSI_RESET + "] " + msg);
+			else if (style == 1)
+				System.out.println("[ERROR] " + msg);
+			else if (style == 3)
+				System.out.println("[" + ANSI_DEBUG + "D" + ANSI_RESET + "] " + msg);
+			else
+				System.out.println("[" + ANSI_DEBUG + "#" + ANSI_RESET + "] " + msg);
 		}
 	}
 
@@ -548,15 +549,17 @@ public class Main {
 	 *
 	 * @param targetDirectory directory to copy the current config file to
 	 */
-	private void copyConfigFile(Main main, String targetDirectory) {
+	public void copyConfigFile(Main main, String targetDirectory) {
 		Properties prop;
 		main.printDebug("copying the config file");
-		try {
+		try (FileOutputStream outputStream = new FileOutputStream(targetDirectory)) {
 			prop = getPropertiesFile(main, "config.properties", false, true);
+			// TODO bugfix pls
 			prop.store(new FileOutputStream(targetDirectory),
 					"#'default' can be used for: defaultExDate, defaultSerialNumber, defaultValidity, defaultStDate");
 			main.printInfo("successfully copied the config.properties file");
 		} catch (IOException ioe) {
+			ioe.printStackTrace();
 			main.printError("default config file couldn't be found");
 			main.printError("copy failed");
 			main.printDebug(ioe.getMessage());
@@ -1119,15 +1122,16 @@ public class Main {
 			}
 		}
 	}
-	
+
 	private void callAlarm(Main main) {
-		new Thread(new Alarm(main)).start();;
+		new Thread(new Alarm(main)).start();
+		;
 	}
-	
+
 	private void toggleDebug() {
 		debug = !debug;
 	}
-	
+
 //	TODO - do this stuff dude
 //	
 //	public List<String> getSubInput(String message, Main main, int mode, boolean freeLineallowed) {

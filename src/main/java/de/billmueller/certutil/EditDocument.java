@@ -2,6 +2,7 @@ package de.billmueller.certutil;
 
 import java.io.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 
 public class EditDocument {
@@ -52,8 +53,8 @@ public class EditDocument {
         BufferedWriter bw;
         try {
             bw = new BufferedWriter(new FileWriter(new File(pF + "/" + f + ".txt"), !replace));
-            Scanner sc = new Scanner(System.in);
-            String in;
+			Scanner sc = new Scanner(System.in);
+			String in;
             main.printInfo("Now you can write ");
             int c = 1, exit = 0;
             bw.write("--- " + new Date() + " ---");
@@ -84,5 +85,17 @@ public class EditDocument {
             main.printError("directory couldn't be found");
 
         }
+    }
+    public void writeStringToDocument(Main main, File outputFile, String input) {
+    	writeStringToDocument(main, outputFile, input.split("\n"));
+    }
+    public void writeStringToDocument(Main main, File outputFile, String[] input) {
+    	try (FileOutputStream fos = new FileOutputStream(outputFile)){
+    	for (String currentLine : input) {
+    		
+    	}
+    	} catch (Exception e) {
+			main.printError("The output file couldn't be found");
+		}
     }
 }
