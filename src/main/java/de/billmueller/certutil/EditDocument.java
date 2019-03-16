@@ -50,9 +50,7 @@ public class EditDocument {
      * @param main          main object of the Main class (needed to call all printError/-Info/-Help/-Console functions)
      */
     public void write(String f, String pF, Main main, boolean replace) {
-        BufferedWriter bw;
-        try {
-            bw = new BufferedWriter(new FileWriter(new File(pF + "/" + f + ".txt"), !replace));
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(pF + "/" + f + ".txt"), !replace))){
 			Scanner sc = new Scanner(System.in);
 			String in;
             main.printInfo("Now you can write ");
@@ -80,7 +78,6 @@ public class EditDocument {
                 c++;
             }
             bw.newLine();
-            bw.close();
         } catch (IOException ioe) {
             main.printError("directory couldn't be found");
 
