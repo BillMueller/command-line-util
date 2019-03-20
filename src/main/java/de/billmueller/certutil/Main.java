@@ -125,7 +125,7 @@ public class Main {
                 start = false;
                 while (!start) {
                     main.printDebug("Starting change Directoy loop");
-                    main.printEditor("Enter directory");
+                    main.printEditor("Enter directory", false);
                     in = sc.nextLine();
                     if (in.split("/")[0].length() == 2) {
                         main.printDebug("The directory passed the easy validity test...");
@@ -141,7 +141,7 @@ public class Main {
                     } else {
                         main.printDebug("Starting the login process");
                         Users user = new Users();
-                        main.printEditor("Enter Username");
+                        main.printEditor("Enter Username", false);
                         boolean login = user.setUser(main, in = sc.nextLine());
                         main.printDebug("Checking username validity...");
                         while (login) {
@@ -150,7 +150,7 @@ public class Main {
                                 System.exit(1);
                             }
                             main.printError("The Username you've entered isn't valid");
-                            main.printEditor("Enter Username");
+                            main.printEditor("Enter Username", false);
                             login = user.setUser(main, in = sc.nextLine());
                         }
                         main.printDebug("Starting password input process");
@@ -187,7 +187,7 @@ public class Main {
             }
             main.cd = false;
             main.setToDefault();
-            main.printEditor(main.pFile);
+            main.printEditor(main.pFile, false);
             in = sc.nextLine();
             sin = in.split(" ");
             if (sin.length != 0 && !in.equals("")) {
@@ -478,7 +478,7 @@ public class Main {
             System.out.println("[" + customText + "] " + msg);
         else {
             String[] splittedCustomText = customText.split(" ");
-            System.out.println("[" + ANSI_OUTPUT + splittedCustomText[0] + " " + splittedCustomText[1] + " " + splittedCustomText[2] +ANSI_RESET + "] " + msg);
+            System.out.println("[" + ANSI_OUTPUT + splittedCustomText[0] + " " + splittedCustomText[1] + " " + splittedCustomText[2] + ANSI_RESET + "] " + msg);
         }
     }
 
@@ -521,17 +521,18 @@ public class Main {
      *
      * @param msg the message in yellow after the [J-CONSOLE>
      */
-    public void printEditor(String msg) {
+    public void printEditor(String msg, boolean cr) {
+        String crAddition = cr ? "\r": "";
         if (style == 0 || style == 2)
-            System.out.print("[" + ANSI_INPUT + "J-CONSOLE" + ANSI_RESET + "> " + ANSI_INPUT + msg + ANSI_RESET + "> ");
+            System.out.print(crAddition + "[" + ANSI_INPUT + "J-CONSOLE" + ANSI_RESET + "> " + ANSI_INPUT + msg + ANSI_RESET + "> ");
         else if (style == 1)
-            System.out.print("[J-CONSOLE> " + msg + "> ");
+            System.out.print(crAddition + "[J-CONSOLE> " + msg + "> ");
         else {
             String[] msgList = msg.split("/");
             if (msgList.length < 3) {
-                System.out.print("[" + ANSI_INPUT + msg + ANSI_RESET + "> ");
+                System.out.print(crAddition + "[" + ANSI_INPUT + msg + ANSI_RESET + "> ");
             } else {
-                System.out.print("[" + ANSI_INPUT + ".../" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
+                System.out.print(crAddition + "[" + ANSI_INPUT + ".../" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
             }
         }
     }
@@ -1114,25 +1115,25 @@ public class Main {
             Scanner sc = new Scanner(System.in);
             if (regitstration) {
                 String[] registrationData = new String[4];
-                main.printEditor("Enter the platform name");
+                main.printEditor("Enter the platform name", false);
                 registrationData[0] = sc.nextLine();
-                main.printEditor("Enter your nickname");
+                main.printEditor("Enter your nickname", false);
                 registrationData[1] = sc.nextLine();
-                main.printEditor("Enter the used e-mail adress");
+                main.printEditor("Enter the used e-mail adress", false);
                 registrationData[2] = sc.nextLine();
-                main.printEditor("Enter the password");
+                main.printEditor("Enter the password", false);
                 registrationData[3] = sc.nextLine();
                 if (!main.noteDocument.makeRegistrationNote(registrationData[0], registrationData[1], registrationData[2], registrationData[3]))
                     main.printError("couldn't create your note");
             } else {
-                main.printEditor("Enter your note");
+                main.printEditor("Enter your note", false);
                 String input;
                 while (!(input = sc.nextLine()).equals("")) {
                     if (!main.noteDocument.makeNote(input)) {
                         main.printError("couldn't search your note");
                         break;
                     } else
-                        printEditor("Enter your note");
+                        printEditor("Enter your note", false);
                 }
             }
         }
@@ -1142,22 +1143,51 @@ public class Main {
         if (main.permissionFile == null)
             printError("You don't have permissions to execute that command");
         else {
-            printEditor("Enter your keyword");
+            printEditor("Enter your keyword", false);
             Scanner sc = new Scanner(System.in);
             String input;
             while (!(input = sc.nextLine()).equals("")) {
                 main.noteDocument.searchNote(input);
-                printEditor("Enter your keyword");
+                printEditor("Enter your keyword", false);
             }
         }
     }
 
     private void callAlarm(Main main) {
-        new Thread(new Alarm(main)).start();
+//        new Thread(new Alarm(main)).start();
     }
 
     private void toggleDebug() {
         debug = !debug;
+    }
+
+    public int[] stringToIntArray(String time, String date, boolean relativeTime) throws IOException {
+        int[] timeOutput = new int[6];
+        String[] timeArray = time.contains("-") ? time.split("-") : time.split(":");
+        if (!relativeTime) {
+            if (date == null) {
+                timeOutput[0] = 0;
+                timeOutput[1] = 0;
+                timeOutput[2] = 0;
+            } else {
+                String[] dateArray = date.contains("-") ? date.split("-") : date.split(":");
+                if (dateArray[0].length() == 4) {
+                    timeOutput[0] = Integer.parseInt(dateArray[0]);
+                    timeOutput[1] = Integer.parseInt(dateArray[1]);
+                    timeOutput[2] = Integer.parseInt(dateArray[2]);
+                } else if (dateArray[2].length() == 4) {
+                    timeOutput[0] = Integer.parseInt(dateArray[2]);
+                    timeOutput[1] = Integer.parseInt(dateArray[1]);
+                    timeOutput[2] = Integer.parseInt(dateArray[0]);
+                } else {
+                    throw new IOException("Invalid date format. Use: [DD-MM-YYYY] or [YYYY-MM-DD]");
+                }
+            }
+        } else
+            timeOutput[0] = -1;
+        timeOutput[3] = Integer.parseInt(timeArray[0]);
+        timeOutput[4] = Integer.parseInt(timeArray[1]);
+        return timeOutput;
     }
 
 //	TODO - do this stuff dude
