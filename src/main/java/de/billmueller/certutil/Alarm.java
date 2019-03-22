@@ -5,11 +5,11 @@ import java.util.Date;
 
 public class Alarm implements Runnable {
     private Main main;
-    private Calendar cal = Calendar.getInstance();
     private Date alarmTime = new Date();
     private String message;
 
     public Alarm(Main main, int[] time, String message) {
+        Calendar cal = Calendar.getInstance();
         this.main = main;
         this.message = message;
         if (time[0] != -1) {
@@ -33,12 +33,12 @@ public class Alarm implements Runnable {
     }
 
     public void run() {
-        System.out.println(alarmTime);
         try {
             while (alarmTime.after(new Date())) {
                 Thread.sleep(1000);
+                //TODO add sound
             }
-            main.printEditor("Alarm: " + message, true);
+            main.printAlarm(message==null ? "Alarm" : message);
         }catch (InterruptedException ire){
             main.printError("the alarm thread got interrupted");
             main.printDebug("error message: " + ire.getMessage());

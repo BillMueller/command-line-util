@@ -17,14 +17,16 @@ public class Main {
     private String ANSI_OUTPUT = "\u001B[94m";
     private String ANSI_DEBUG = "\u001B[36m";
 
-    public int style = 0;
-    public boolean debug = false;
+    private int style = 0;
+    public boolean debug = true;
     private String pFile;
     private String configFile = "default";
     private String permissionFile;
-    private String username;
+    public String username;
     public String usersFile = "default";
     private Note noteDocument = null;
+
+    private Thread[] alarmArray = new Thread[5];
 
     @Parameter(names = {"setConfig", "sc"}, description = "sets the used config file to a new directory")
     private boolean setConfig;
@@ -73,7 +75,7 @@ public class Main {
     private String fileName;
     @Parameter(names = {"--certificateFile", "--certFile"}, description = "set the certificate name")
     private String certFileName;
-    @Parameter(names = {"--signatureAlgorithm", "signAlg"}, description = "set signature algorithm")
+    @Parameter(names = {"--signatureAlgorithm", "--signAlg"}, description = "set signature algorithm")
     private String signAlg;
     @Parameter(names = "--read", description = "decide if you want to read the certificate after generating it")
     private boolean bRead;
@@ -95,10 +97,16 @@ public class Main {
     private boolean styleToggle;
     @Parameter(names = "--replace")
     private boolean replace;
-    @Parameter(names = "--time")
-    private int time;
-    @Parameter(names = {"--registratopn", "-r", "--game", "-g"})
-    private boolean regitstration;
+    @Parameter(names = {"-r", "--registration"})
+    private boolean registration;
+    @Parameter(names = {"--date", "-d"})
+    private String alarmDate;
+    @Parameter(names = {"--time", "-t"})
+    private String alarmTime;
+    @Parameter(names = {"--message", "-m"})
+    private String alarmMessage;
+    @Parameter(names = {"--relativeTime", "-rT"})
+    private String relativeTime;
 
     /**
      * Main function with the J-console input functionality <br>
@@ -125,7 +133,7 @@ public class Main {
                 start = false;
                 while (!start) {
                     main.printDebug("Starting change Directoy loop");
-                    main.printEditor("Enter directory", false);
+                    main.printEditor("Enter directory");
                     in = sc.nextLine();
                     if (in.split("/")[0].length() == 2) {
                         main.printDebug("The directory passed the easy validity test...");
@@ -141,7 +149,7 @@ public class Main {
                     } else {
                         main.printDebug("Starting the login process");
                         Users user = new Users();
-                        main.printEditor("Enter Username", false);
+                        main.printEditor("Enter Username");
                         boolean login = user.setUser(main, in = sc.nextLine());
                         main.printDebug("Checking username validity...");
                         while (login) {
@@ -150,7 +158,7 @@ public class Main {
                                 System.exit(1);
                             }
                             main.printError("The Username you've entered isn't valid");
-                            main.printEditor("Enter Username", false);
+                            main.printEditor("Enter Username");
                             login = user.setUser(main, in = sc.nextLine());
                         }
                         main.printDebug("Starting password input process");
@@ -187,7 +195,7 @@ public class Main {
             }
             main.cd = false;
             main.setToDefault();
-            main.printEditor(main.pFile, false);
+            main.printEditor(main.pFile);
             in = sc.nextLine();
             sin = in.split(" ");
             if (sin.length != 0 && !in.equals("")) {
@@ -342,8 +350,11 @@ public class Main {
         cStyle = null;
         styleToggle = false;
         replace = false;
-        time = 0;
-        regitstration = false;
+        alarmTime = null;
+        alarmDate = null;
+        alarmMessage = null;
+        relativeTime = null;
+        registration = false;
     }
 
     /**
@@ -521,19 +532,34 @@ public class Main {
      *
      * @param msg the message in yellow after the [J-CONSOLE>
      */
-    public void printEditor(String msg, boolean cr) {
-        String crAddition = cr ? "\r": "";
+    public void printEditor(String msg) {
         if (style == 0 || style == 2)
-            System.out.print(crAddition + "[" + ANSI_INPUT + "J-CONSOLE" + ANSI_RESET + "> " + ANSI_INPUT + msg + ANSI_RESET + "> ");
+            System.out.print("[" + ANSI_INPUT + "J-CONSOLE" + ANSI_RESET + "> " + ANSI_INPUT + msg + ANSI_RESET + "> ");
         else if (style == 1)
-            System.out.print(crAddition + "[J-CONSOLE> " + msg + "> ");
+            System.out.print("[J-CONSOLE> " + msg + "> ");
         else {
             String[] msgList = msg.split("/");
             if (msgList.length < 3) {
-                System.out.print(crAddition + "[" + ANSI_INPUT + msg + ANSI_RESET + "> ");
+                System.out.print("[" + ANSI_INPUT + msg + ANSI_RESET + "> ");
             } else {
-                System.out.print(crAddition + "[" + ANSI_INPUT + ".../" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
+                System.out.print("[" + ANSI_INPUT + ".../" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
             }
+        }
+    }
+
+    /**
+     * Prints a yellow [J-CONSOLE> in front of the message and the msg after it also
+     * in yellow
+     *
+     * @param msg the message in yellow after the [Alarm>
+     */
+    public void printAlarm(String msg) {
+        if (style == 0 || style == 2)
+            System.out.print(ANSI_INPUT + "Alarm: " + ANSI_RESET + "> " + ANSI_INPUT + msg + ANSI_RESET + "> ");
+        else if (style == 1)
+            System.out.print("Alarm> " + msg + "> ");
+        else {
+            System.out.print(ANSI_INPUT + msg + ANSI_RESET + "> ");
         }
     }
 
@@ -1113,27 +1139,27 @@ public class Main {
             printError("You don't have permissions to execute that command");
         else {
             Scanner sc = new Scanner(System.in);
-            if (regitstration) {
+            if (registration) {
                 String[] registrationData = new String[4];
-                main.printEditor("Enter the platform name", false);
+                main.printEditor("Enter the platform name");
                 registrationData[0] = sc.nextLine();
-                main.printEditor("Enter your nickname", false);
+                main.printEditor("Enter your nickname");
                 registrationData[1] = sc.nextLine();
-                main.printEditor("Enter the used e-mail adress", false);
+                main.printEditor("Enter the used e-mail adress");
                 registrationData[2] = sc.nextLine();
-                main.printEditor("Enter the password", false);
+                main.printEditor("Enter the password");
                 registrationData[3] = sc.nextLine();
                 if (!main.noteDocument.makeRegistrationNote(registrationData[0], registrationData[1], registrationData[2], registrationData[3]))
                     main.printError("couldn't create your note");
             } else {
-                main.printEditor("Enter your note", false);
+                main.printEditor("Enter your note");
                 String input;
                 while (!(input = sc.nextLine()).equals("")) {
                     if (!main.noteDocument.makeNote(input)) {
                         main.printError("couldn't search your note");
                         break;
                     } else
-                        printEditor("Enter your note", false);
+                        printEditor("Enter your note");
                 }
             }
         }
@@ -1143,25 +1169,39 @@ public class Main {
         if (main.permissionFile == null)
             printError("You don't have permissions to execute that command");
         else {
-            printEditor("Enter your keyword", false);
+            printEditor("Enter your keyword");
             Scanner sc = new Scanner(System.in);
             String input;
             while (!(input = sc.nextLine()).equals("")) {
                 main.noteDocument.searchNote(input);
-                printEditor("Enter your keyword", false);
+                printEditor("Enter your keyword");
             }
         }
     }
 
     private void callAlarm(Main main) {
-//        new Thread(new Alarm(main)).start();
+        if (alarmTime == null && relativeTime == null) {
+            main.printError("You have to enter an alarm ");
+        } else {
+            try {
+                int firstFreeSpot;
+                main.printDebug("The first free spot found in the Array was spot " + (firstFreeSpot = findFirstEmptySpotOfArray(alarmArray)));
+                if (relativeTime != null)
+                    alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(relativeTime, null, true), alarmMessage));
+                else
+                    alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(alarmTime, alarmDate, false), alarmMessage));
+                alarmArray[firstFreeSpot].start();
+            } catch (IOException ioe) {
+                main.printError(ioe.getMessage());
+            }
+        }
     }
 
     private void toggleDebug() {
         debug = !debug;
     }
 
-    public int[] stringToIntArray(String time, String date, boolean relativeTime) throws IOException {
+    public int[] stringToTimeArray(String time, String date, boolean relativeTime) throws IOException {
         int[] timeOutput = new int[6];
         String[] timeArray = time.contains("-") ? time.split("-") : time.split(":");
         if (!relativeTime) {
@@ -1185,10 +1225,24 @@ public class Main {
             }
         } else
             timeOutput[0] = -1;
-        timeOutput[3] = Integer.parseInt(timeArray[0]);
-        timeOutput[4] = Integer.parseInt(timeArray[1]);
+        if (timeArray.length == 1) {
+            timeOutput[4] = Integer.parseInt(timeArray[0]);
+        } else {
+            timeOutput[3] = Integer.parseInt(timeArray[0]);
+            timeOutput[4] = Integer.parseInt(timeArray[1]);
+        }
         return timeOutput;
     }
+
+    public int findFirstEmptySpotOfArray(Object[] inputArray) throws IOException {
+        for (int i = 0; i < inputArray.length; i++) {
+            if (inputArray[i] == null) {
+                return i;
+            }
+        }
+        throw new IOException("You have already have 5 alarms open (use alarm --show to show them)");
+    }
+}
 
 //	TODO - do this stuff dude
 //	
@@ -1213,4 +1267,3 @@ public class Main {
 //            c++;
 //        }
 //	}
-}
