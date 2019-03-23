@@ -1,10 +1,2 @@
-Jakob
-pirate
-C:/Users/Dell/Desktop/cmt
-4
-C:/Users/Dell/Dell/Jakob/cmt
-TestUser
-testpwd
-C:/Users
-0
-default
+Jakob;pirate;C:/Users/Dell/Desktop/cmt;4;C:/Users/Dell/Dell/Jakob/cmt
+User;pwd;C/Users/Dell/Desktop;0;C:/Users/Dell/Desktop

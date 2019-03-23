@@ -18,7 +18,7 @@ public class Main {
     private String ANSI_DEBUG = "\u001B[36m";
 
     private int style = 0;
-    public boolean debug = true;
+    public boolean debug = false;
     private String pFile;
     private String configFile = "default";
     private String permissionFile;
