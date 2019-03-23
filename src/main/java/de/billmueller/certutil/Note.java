@@ -16,7 +16,7 @@ public class Note {
             bw = new BufferedWriter(new FileWriter(new File(userNoteFile), true));
         } catch (IOException ioe) {
             main.printError("Error with setting up the note option");
-            main.printDebug("IOExcpetion: " + ioe.toString());
+            main.printDebug("IOException: " + ioe.toString());
             return false;
         }
         return true;
@@ -30,7 +30,7 @@ public class Note {
                 bw.flush();
             } catch (IOException ioe) {
                 main.printError("Error with creating the note");
-                main.printDebug("IOExcpetion: " + ioe.toString());
+                main.printDebug("IOException: " + ioe.toString());
                 return false;
             }
         } else {

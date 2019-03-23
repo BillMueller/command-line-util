@@ -16,7 +16,6 @@ public class EditDocument {
      */
     public void read(String f, String pF, Main main) {
         try {
-            FileReader fr;
             if (pF == null || f == null) {
                 main.printError("you need to enter a file name");
                 main.printInfo("for example use 'rd --file example' -> will read the file example.txt");
@@ -39,6 +38,7 @@ public class EditDocument {
             main.printInfo("dont use example.txt as file name but only example");
         } catch (IOException ioe) {
             main.printError("could not read file " + f + ".txt");
+            main.printDebug(ioe.getMessage());
         }
     }
 
@@ -80,7 +80,7 @@ public class EditDocument {
             bw.newLine();
         } catch (IOException ioe) {
             main.printError("directory couldn't be found");
-
+            main.printDebug(ioe.getMessage());
         }
     }
     public void writeStringToDocument(Main main, File outputFile, String input) {

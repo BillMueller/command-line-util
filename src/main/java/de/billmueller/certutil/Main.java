@@ -20,16 +20,16 @@ public class Main {
     private int style = 0;
     public boolean debug = false;
     private String pFile;
-    private String configFile = "default";
-    private String permissionFile;
-    public String username;
-    public String usersFile = "default";
+    private int permissionLevel = 0;
+    public String username = null;
     private Note noteDocument = null;
+
+    private String operatingSystem = System.getProperty("os.name");
+    public File appDataDirectory = new File(System.getenv().get("APPDATA") + "/jCommander");
+    public String configFileName = "config.properties", usersFileName = "users.txt";
 
     private Thread[] alarmArray = new Thread[5];
 
-    @Parameter(names = {"setConfig", "sc"}, description = "sets the used config file to a new directory")
-    private boolean setConfig;
     @Parameter(names = {"writeCertificate", "wc"}, description = "generate a new certificate")
     private boolean writeC;
     @Parameter(names = {"writeDocument", "wd"}, description = "changes to J-Console")
@@ -56,8 +56,10 @@ public class Main {
     private boolean searchNote;
     @Parameter(names = "alarm", description = "creates an alarm for the time entered")
     private boolean alarm;
-    @Parameter(names = {"toggleDebug", "debug", "tD"}, description = "changes between debug and normal mode")
+    @Parameter(names = {"toggleDebug", "debug"}, description = "changes between debug and normal mode")
     private boolean toggleDebug;
+    @Parameter(names = "logout", description = "logs the user out")
+    private boolean logout;
 
     @Parameter(names = {"--issuerName", "--iName"}, description = "eneter the ca name")
     private String iName;
@@ -118,6 +120,16 @@ public class Main {
      */
     public void main() {
         Main main = new Main();
+        main.operatingSystem = operatingSystem;
+        main.appDataDirectory = appDataDirectory;
+        main.printDebug("Operating system found: " + operatingSystem);
+        main.printDebug(appDataDirectory.exists() ? "App Data Directory: " + appDataDirectory : "App Data Directory: No Directory Existing so far");
+        if (!appDataDirectory.exists()) {
+            main.printInfo("Setup still missing");
+            main.printInfo("Running full setup...");
+            Setup setup = new Setup();
+            setup.start(main, true);
+        }
         Scanner sc = new Scanner(System.in);
         String in;
         JCommander jc;
@@ -132,21 +144,12 @@ public class Main {
                 main.printDebug("Starting change Directory process");
                 start = false;
                 while (!start) {
-                    main.printDebug("Starting change Directoy loop");
+                    main.printDebug("Starting change Directory loop");
                     main.printEditor("Enter directory");
                     in = sc.nextLine();
-                    if (in.split("/")[0].length() == 2) {
-                        main.printDebug("The directory passed the easy validity test...");
-                        main.pFile = in;
-                        start = true;
-                    } else if (!in.equals("exit") && !in.equals("login")) {
-                        main.printDebug("The length of the first thing before the / is not 2 (it is "
-                                + in.split("/")[0].length() + ")");
-                        main.printError("the path file you entered is not valid.");
-                        main.printInfo("Use '/' for example C:/Users");
-                    } else if (in.equals("exit")) {
+                    if (in.equals("exit")) {
                         exitConsole(main);
-                    } else {
+                    } else if (in.equals(("login"))) {
                         main.printDebug("Starting the login process");
                         Users user = new Users();
                         main.printEditor("Enter Username");
@@ -176,20 +179,56 @@ public class Main {
                         }
                         main.printDebug("Setting the default values for the user");
                         main.cd = false;
-                        main.permissionFile = user.getPermissionFile();
+                        main.permissionLevel = user.getPermissionLevel();
                         start = true;
                         main.pFile = user.getDefaultDirectory();
                         main.style = user.getDefaultStyle();
-                        if (main.permissionFile != null) {
+                        if (main.permissionLevel > 1) {
                             main.noteDocument = new Note();
-                            if (!main.noteDocument.createNote(main, main.permissionFile + "/" + user.getName() + "sNotes.txt"))
+                            if (!main.noteDocument.createNote(main, appDataDirectory + "/" + user.getName() + "sNotes.txt"))
                                 main.printError("Your permissions file couldn't be found. Please contact a system administrator");
-                        } else
+                        } else {
                             main.noteDocument = null;
+                            debug = false;
+                        }
                         main.printInfo("Welcome " + (main.username = user.getName()));
-                        main.printDebug("Permissions File " + main.permissionFile);
+                        main.printDebug("Permissions File " + permissionLevel);
                         main.printDebug("Default Directory " + main.pFile);
                         main.printDebug("Default Style: " + main.style);
+                    } else {
+                        main.printDebug("The operating System is: " + operatingSystem);
+                        if (operatingSystem.equals("Linux")) {
+                            if (in.startsWith("/home")) {
+                                if (in.endsWith("/")) {
+                                    in.substring(0, in.length() - 1);
+                                }
+                                main.printDebug("The directory passed the Linux validity test...");
+                                main.pFile = in;
+                                start = true;
+                            } else {
+                                main.printDebug("The directory has to start with /home for Linux");
+                                main.printError("the path file you entered is not valid.");
+                                main.printInfo("Start the directory with /home");
+                            }
+                        } else if (operatingSystem.split(" ")[0].equals("Windows")) {
+                            if (in.split("/")[0].length() == 2 && in.contains(":")) {
+                                if (in.endsWith("/")) {
+                                    in.substring(0, in.length() - 1);
+                                }
+                                main.printDebug("The directory passed the Windows validity test...");
+                                main.pFile = in;
+                                start = true;
+                            } else {
+                                main.printDebug("The length of the first thing before the / is not 2 (it is " + in.split("/")[0].length() + ")");
+                                main.printError("the path file you entered is not valid.");
+                                main.printInfo("Use '/' for example C:/Users");
+                            }
+                        } else {
+                            main.printDebug("The operating system wasn't recognized (it is not Windows or Linux)");
+                            main.printDebug("There is no validity test for the operating System (setting the entered file to new directory path): " + in);
+                            main.pFile = in;
+                            start = true;
+                        }
                     }
                 }
             }
@@ -235,8 +274,7 @@ public class Main {
                     main.printDebug("calling change Style");
                     callChangeStyle(main);
                 } else {
-                    String defaultConfigFileName = "config.properties";
-                    Properties dProps = callGetPropertiesFile(main, defaultConfigFileName);
+                    Properties dProps = callGetPropertiesFile(main);
 
                     List<String> props = getPropertiesData(dProps);
 
@@ -278,8 +316,7 @@ public class Main {
      * @return object of the type Properties (with object.getProperty(property) you
      * can get the value for the property
      */
-    public Properties getPropertiesFile(Main main, String configFileName, boolean printMsg, boolean defaultPath)
-            throws IOException {
+    public Properties getPropertiesFile(Main main, String configFileName, boolean printMsg, boolean defaultPath) throws IOException {
         if (printMsg)
             if (defaultPath)
                 main.printDebug("loading config.properties");
@@ -296,7 +333,7 @@ public class Main {
                 if (printMsg)
                     main.printDebug("successfully loaded settings from " + configFileName);
             } catch (IOException ex) {
-                main.printDebug("IOExeption:");
+                main.printDebug("IOException:");
                 main.printDebug(ex.getMessage());
             }
         } else {
@@ -325,11 +362,11 @@ public class Main {
         gHelp = false;
         et = false;
         dt = false;
-        setConfig = false;
         note = false;
         searchNote = false;
         alarm = false;
         toggleDebug = false;
+        logout = false;
         // -------+
         iName = null;
         sName = null;
@@ -539,10 +576,10 @@ public class Main {
             System.out.print("[J-CONSOLE> " + msg + "> ");
         else {
             String[] msgList = msg.split("/");
-            if (msgList.length < 3) {
+            if (msgList.length < (operatingSystem.contains("Windows") ? 4 : 3)) {
                 System.out.print("[" + ANSI_INPUT + msg + ANSI_RESET + "> ");
             } else {
-                System.out.print("[" + ANSI_INPUT + ".../" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
+                System.out.print("[" + ANSI_INPUT + ".../" + msgList[msgList.length - 2] + "/" + msgList[msgList.length - 1] + ANSI_RESET + "> ");
             }
         }
     }
@@ -566,33 +603,6 @@ public class Main {
     // -----------+
 
     /**
-     * calls the functions needed when the "setConfig" command is executed
-     */
-    private void callSetConfig(Main main) {
-        if (directoryName == null)
-            printError(
-                    "you have to enter a directory path where your want the new config file to be with the argument --directory <filename>");
-        else {
-            setConfig(main, directoryName + "/config.properties");
-            if (copyConfig) {
-                copyConfigFile(main, directoryName + "/config.properties");
-            }
-        }
-    }
-
-    /**
-     * Sets the default config file to the target directory
-     *
-     * @param targetDirectory target directory to set the config File to
-     */
-    private void setConfig(Main main, String targetDirectory) {
-        main.printDebug("setting new config file");
-        main.printDebug("old config file: " + configFile);
-        configFile = targetDirectory;
-        main.printDebug("new config file: " + configFile);
-    }
-
-    /**
      * Copies the Config file to the target directory
      *
      * @param targetDirectory directory to copy the current config file to
@@ -602,7 +612,6 @@ public class Main {
         main.printDebug("copying the config file");
         try (FileOutputStream outputStream = new FileOutputStream(targetDirectory)) {
             prop = getPropertiesFile(main, "config.properties", false, true);
-            // TODO bugfix pls
             prop.store(new FileOutputStream(targetDirectory),
                     "#'default' can be used for: defaultExDate, defaultSerialNumber, defaultValidity, defaultStDate");
             main.printInfo("successfully copied the config.properties file");
@@ -612,7 +621,6 @@ public class Main {
             main.printError("copy failed");
             main.printDebug(ioe.getMessage());
         }
-
     }
 
     /**
@@ -713,8 +721,10 @@ public class Main {
                         .printCertDataToConsole(new EditCertificate().read(main.pFile + "/" + fileName, main), main);
             } catch (IOException e) {
                 printError("Couldn't find the certificate to read");
+                main.printDebug(e.getMessage());
             } catch (CertificateException e) {
                 printError("Couldn't read the certificate");
+                main.printDebug(e.getMessage());
             }
         }
     }
@@ -755,17 +765,22 @@ public class Main {
                             "CN = " + sName, keyPair, serNumber, stDate, exDate, signAlg, false, main);
                 } catch (CertificateEncodingException e) {
                     printError("Couldn't encode the certificate");
+                    main.printDebug(e.getMessage());
                 } catch (SignatureException e) {
                     printError("Couldn't sign the certificate");
+                    main.printDebug(e.getMessage());
                 } catch (InvalidKeyException e) {
                     printError("The generated key isn't valid");
+                    main.printDebug(e.getMessage());
                 } catch (IOException e) {
                     printError("Couldn't write the certificate");
+                    main.printDebug(e.getMessage());
                 } catch (NoSuchAlgorithmException e) {
                     printError("The entered algorithm is wrong");
+                    main.printDebug(e.getMessage());
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                main.printDebug(e.getMessage());
             }
             if (bRead) {
                 callReadCertificate(main);
@@ -1021,29 +1036,17 @@ public class Main {
     /**
      * Calls the current config file set
      *
-     * @param defaultConfigFileName the name of the config file (by default
-     *                              config.properties)
+     * @param main the name of the main class
      * @return properties of the properties file (new Properties() if the file
      * couldn't be found)
      */
-    private Properties callGetPropertiesFile(Main main, String defaultConfigFileName) {
-        if (!configFile.equals("default")) {
-            try {
-                return getPropertiesFile(main, configFile, true, false);
-            } catch (IOException ioe) {
-                main.printError("no file could be found at " + defaultConfigFileName);
-                main.printInfo("the name of the config file must be config.properties");
-                main.printInfo("using default config.properties file");
-                return new Properties();
-            }
-        } else {
-            try {
-                return getPropertiesFile(main, defaultConfigFileName, true, true);
-            } catch (IOException e) {
-                main.printError("default config file couldn't be found");
-                main.printInfo("using default configs");
-                return new Properties();
-            }
+    private Properties callGetPropertiesFile(Main main) {
+        try {
+            return getPropertiesFile(main, main.appDataDirectory + "/" + main.configFileName, true, false);
+        } catch (IOException e) {
+            main.printError("default config file couldn't be found");
+            main.printInfo("using default configs");
+            return new Properties();
         }
     }
 
@@ -1074,9 +1077,6 @@ public class Main {
         }
         if (dt) {
             printHelpToConsole(8);
-        }
-        if (setConfig) {
-            printHelpToConsole(9);
         }
         if (cd) {
             printHelpToConsole(4);
@@ -1117,8 +1117,6 @@ public class Main {
             callEncodeDocument(main);
         else if (dt)
             callDecodeDocument(main);
-        else if (setConfig)
-            callSetConfig(main);
         else if (note)
             callMakeNote(main);
         else if (searchNote)
@@ -1127,6 +1125,16 @@ public class Main {
             callAlarm(main);
         else if (toggleDebug)
             toggleDebug();
+        else if (logout)
+            logout(main);
+    }
+
+    private void logout(Main main) {
+        main.printInfo("logging out...");
+        main.printInfo("bye " + username);
+        main.username = null;
+        main.noteDocument = null;
+        main.permissionLevel = 0;
     }
 
     private void exitConsole(Main main) {
@@ -1135,8 +1143,8 @@ public class Main {
     }
 
     private void callMakeNote(Main main) {
-        if (main.permissionFile == null)
-            printError("You don't have permissions to execute that command");
+        if (main.permissionLevel == 0)
+            printError("You need to be logged in to execute this command");
         else {
             Scanner sc = new Scanner(System.in);
             if (registration) {
@@ -1166,8 +1174,8 @@ public class Main {
     }
 
     private void callSearchNote(Main main) {
-        if (main.permissionFile == null)
-            printError("You don't have permissions to execute that command");
+        if (main.permissionLevel == 0)
+            printError("You need to be logged in to execute this command");
         else {
             printEditor("Enter your keyword");
             Scanner sc = new Scanner(System.in);
@@ -1198,7 +1206,8 @@ public class Main {
     }
 
     private void toggleDebug() {
-        debug = !debug;
+        if (permissionLevel > 1)
+            debug = !debug;
     }
 
     public int[] stringToTimeArray(String time, String date, boolean relativeTime) throws IOException {

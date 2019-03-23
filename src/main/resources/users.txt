@@ -1,2 +1,2 @@
-Jakob;pirate;C:/Users/Dell/Desktop/cmt;4;C:/Users/Dell/Dell/Jakob/cmt
-User;pwd;C/Users/Dell/Desktop;0;C:/Users/Dell/Desktop
+Jakob;pirate;C:/Users/Dell/Desktop/cmt;4;3
+User;pwd;C/Users/Dell/Desktop;0;1
