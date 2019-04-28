@@ -1177,7 +1177,7 @@ public class Main {
                 registrationData[0] = sc.nextLine();
                 main.printEditor("Enter your nickname");
                 registrationData[1] = sc.nextLine();
-                main.printEditor("Enter the used e-mail adress");
+                main.printEditor("Enter the used e-mail address");
                 registrationData[2] = sc.nextLine();
                 main.printEditor("Enter the password");
                 registrationData[3] = sc.nextLine();
