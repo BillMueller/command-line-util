@@ -25,7 +25,8 @@ public class Main {
     private Note noteDocument = null;
 
     private String operatingSystem = System.getProperty("os.name");
-    public File appDataDirectory = new File(System.getenv().get("APPDATA") + "/jCommander");
+    private String setupDir = "jCommander";
+    public File appDataDirectory;
     public String configFileName = "config.properties", usersFileName = "users.txt";
 
     private Thread[] alarmArray = new Thread[5];
@@ -119,17 +120,27 @@ public class Main {
      * will call run() function to call the needed functions
      */
     public void main() {
+        if (operatingSystem.split(" ")[0].equals("Windows")) {
+            setupDir = System.getenv().get("APPDATA") + "/jCommander";
+        } else if (operatingSystem.equals("Linux")) {
+            setupDir = System.getenv().get("PWD") + "/.jCommander";
+        }
+        appDataDirectory = new File(setupDir);
+        printDebug("setup directory set to: " + setupDir);
+        //---
         Main main = new Main();
         main.operatingSystem = operatingSystem;
         main.appDataDirectory = appDataDirectory;
+        main.setupDir = setupDir;
         main.printDebug("Operating system found: " + operatingSystem);
-        main.printDebug(appDataDirectory.exists() ? "App Data Directory: " + appDataDirectory : "App Data Directory: No Directory Existing so far");
-        if (!appDataDirectory.exists()) {
+        main.printDebug(appDataDirectory.exists() ? "Setup directory: " + appDataDirectory : "Setup directory: No Directory Existing so far");
+        if (!new File(setupDir).exists()) {
             main.printInfo("Setup still missing");
             main.printInfo("Running full setup...");
             Setup setup = new Setup();
-            setup.start(main, true);
+            setup.start(main, true, setupDir);
         }
+
         Scanner sc = new Scanner(System.in);
         String in;
         JCommander jc;
@@ -198,7 +209,7 @@ public class Main {
                     } else {
                         main.printDebug("The operating System is: " + operatingSystem);
                         if (operatingSystem.equals("Linux")) {
-                            if (in.startsWith("/home")) {
+                            if (in.startsWith("/")) {
                                 if (in.endsWith("/")) {
                                     in.substring(0, in.length() - 1);
                                 }
@@ -253,7 +264,9 @@ public class Main {
         }
         sc.close();
         main.printDebug("Scanner closed");
+
         exitConsole(main);
+
     }
 
     /**
@@ -947,13 +960,18 @@ public class Main {
                 printHelp("encodeDocument | ed\t\t\t[encodes a *.txt file at your file name]");
                 printHelp("decodeDocument | dd\t\t\t[decodes a *.txt file at your file name]");
             }
-            printHelp("setConfig | sc \t\t\t[changes the position of the config file]");
             printHelp("changeDirectory | cd\t\t[gives you the option to select another directory]");
             printHelp("changeStyle | cs\t\t\t[changes between colored and non-colored mode]");
+            if (permissionLevel > 0) {
+                printHelp("note\t\t\t\t\t\t[makes a note in your users note file]");
+                printHelp("searchNote\t\t\t\t[searches in the notes]");
+            }
+            if (permissionLevel > 1) {
+
+            }
             printHelp("exit\t\t\t\t[exits the console]");
             printHelp("");
-            printHelp(
-                    "Use <command> -h | --help to get further information about the command and the parameters you can apply to it");
+            printHelp("Use <command> -h | --help to get further information about the command and the parameters you can apply to it");
         } else if (x == 7) {
             if (style < 3) {
                 printHelp("encodeDocument | ed\t\t[encodes a *.txt file at your file name]");
@@ -976,19 +994,25 @@ public class Main {
                     "\t\t--certFile\t\t<name of the certificate file (The name you entered for the writeCertificate command)>");
             printHelp("\t\t--docDirectory\t\t<directory of the document>");
         } else if (x == 9) {
-            printHelp("setConfig | sc\t\t\t[changes the position of the config file]");
-            printHelp("\t\t--directory\t\t<name of the new directory of the config.properties file>");
-            printHelp("\t\t--copyConfig\t\t[copies the default config file to your selected location]");
+            if (permissionLevel == 0) {
+                printError("You need to be logged in to execute this command");
+            } else {
+                printHelp("note\t\t\t\t\t\t[makes a note in your users note file]");
+                printHelp("\t\t-r | --registration\t[creates a registration note]");
+            }
+            printHelp("note\t\t\t\t\t[makes a note in your user note file]");
         } else if (x == 10) {
             printHelp("changeStyle | cs\t\t\t[changes between colored and non-colored mode]");
-            printHelp("\t\t--toggle\t\t[toggles between the different styles");
-            printHelp("\t\t--style\t\t\t<the style you want to select");
+            printHelp("\t\t--toggle\t\t[toggles between the different styles]");
+            printHelp("\t\t--style\t\t\t<the style you want to select>");
             printHelp("\t\tavailable styles:");
             printHelp("\t\t\tdefault | d");
             printHelp("\t\t\tnon-colored | nc");
             printHelp("\t\t\tone-colored | oc");
             printHelp("\t\t\tone-lettered | ol");
             printHelp("\t\t\tsimple | s");
+        } else if (x == 11) {
+            printHelp("searchNote\t\t\t\t[searches in the notes]");
         }
     }
 
@@ -1044,7 +1068,7 @@ public class Main {
         try {
             return getPropertiesFile(main, main.appDataDirectory + "/" + main.configFileName, true, false);
         } catch (IOException e) {
-            main.printError("default config file couldn't be found");
+            main.printError("default config file couldn't be founddefault config file couldn't be found");
             main.printInfo("using default configs");
             return new Properties();
         }
@@ -1124,7 +1148,7 @@ public class Main {
         else if (alarm)
             callAlarm(main);
         else if (toggleDebug)
-            toggleDebug();
+            toggleDebug(main);
         else if (logout)
             logout(main);
     }
@@ -1188,26 +1212,32 @@ public class Main {
     }
 
     private void callAlarm(Main main) {
-        if (alarmTime == null && relativeTime == null) {
-            main.printError("You have to enter an alarm ");
+        if (permissionLevel == 0) {
+            printError("You need to be logged in to execute this command");
         } else {
-            try {
-                int firstFreeSpot;
-                main.printDebug("The first free spot found in the Array was spot " + (firstFreeSpot = findFirstEmptySpotOfArray(alarmArray)));
-                if (relativeTime != null)
-                    alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(relativeTime, null, true), alarmMessage));
-                else
-                    alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(alarmTime, alarmDate, false), alarmMessage));
-                alarmArray[firstFreeSpot].start();
-            } catch (IOException ioe) {
-                main.printError(ioe.getMessage());
+            if (alarmTime == null && relativeTime == null) {
+                main.printError("You have to enter an alarm ");
+            } else {
+                try {
+                    int firstFreeSpot;
+                    main.printDebug("The first free spot found in the Array was spot " + (firstFreeSpot = findFirstEmptySpotOfArray(alarmArray)));
+                    if (relativeTime != null)
+                        alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(relativeTime, null, true), alarmMessage));
+                    else
+                        alarmArray[firstFreeSpot] = new Thread(new Alarm(main, stringToTimeArray(alarmTime, alarmDate, false), alarmMessage));
+                    alarmArray[firstFreeSpot].start();
+                } catch (IOException ioe) {
+                    main.printError(ioe.getMessage());
+                }
             }
         }
     }
 
-    private void toggleDebug() {
+    private void toggleDebug(Main main) {
         if (permissionLevel > 1)
             debug = !debug;
+        else
+            main.printError("You don't have permissions for that");
     }
 
     public int[] stringToTimeArray(String time, String date, boolean relativeTime) throws IOException {
