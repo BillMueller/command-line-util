@@ -8,19 +8,17 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Setup {
-//    public static void main(String[] args) {
-//		System.getenv().forEach((k, v) -> {
-//			System.out.println(k + ":" + v);
-//		});
+    public static void main(String[] args) {
+//		System.getenv().forEach((k, v) -> {System.out.println(k + ":" + v);});
 //        Setup setup = new Setup();
 //        Main main = new Main();
 //        main.debug = true;
-//        setup.start(main, true);
-//    }
+//        setup.start(main, true, System.getenv().get("USERPROFILE") + "/Desktop/jCommander");
+    }
 
-    public void start(Main main, boolean fullSetup) {
+    public void start(Main main, boolean fullSetup, String setupDir) {
         String configFileName = "config.properties", usersFileName = "users.txt";
-        File index = new File(System.getenv().get("APPDATA") + "/jCommander");
+        File index = new File(setupDir);
         main.printInfo(index.toString());
         if (index.exists() && fullSetup) {
             main.printDebug("resetting the installation folder");
