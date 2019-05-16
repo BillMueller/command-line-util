@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Setup {
-    public static void main(String[] args) {
+//    public static void main(String[] args) {
 //		System.getenv().forEach((k, v) -> {System.out.println(k + ":" + v);});
 //        Setup setup = new Setup();
 //        Main main = new Main();
 //        main.debug = true;
 //        setup.start(main, true, System.getenv().get("USERPROFILE") + "/Desktop/jCommander");
-    }
+//    }
 
     public void start(Main main, boolean fullSetup, String setupDir) {
         String configFileName = "config.properties", usersFileName = "users.txt";

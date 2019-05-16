@@ -1,13 +1,9 @@
 package de.billmueller.certutil;
 
 public class Calculator {
-    private int style;
-    private String username;
     private Main main;
 
-    public Calculator(Main main, int style, String username) {
-        this.style = style;
-        this.username = username;
+    public Calculator(Main main) {
         this.main = main;
     }
 

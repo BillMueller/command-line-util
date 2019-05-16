@@ -22,7 +22,8 @@ public class TestCertUtil {
 		EditCertificate ec = new EditCertificate();
 		TextEncodingDecoding tc = new TextEncodingDecoding();
 
-		testRead(main, ec, new ArrayList<String>());
+		//TODO get the test certificate
+		//testRead(main, ec, new ArrayList<String>());
 
 		testWrite(ec, new ArrayList<String>());
 

@@ -13,7 +13,7 @@ public class Start {
 
         Main main = new Main();
         main.debug = true;
-        Calculator calc = new Calculator(main, 0, "test");
+        Calculator calc = new Calculator(main);
         main.printInfo("Solution: " + calc.calculate("6*8+3/7"));
 
 //        for(int i = 0; i <= 10000; i++){
