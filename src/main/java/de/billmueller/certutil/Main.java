@@ -126,7 +126,7 @@ public class Main {
      * After getting the input it will use JController to handle the input and it
      * will call run() function to call the needed functions
      */
-    public void main() {
+    public void main(boolean calculate) {
         if (operatingSystem.split(" ")[0].equals("Windows")) {
             setupDir = System.getenv().get("APPDATA") + "/jCommander";
         } else if (operatingSystem.equals("Linux")) {
@@ -1167,7 +1167,11 @@ public class Main {
 
     private void callCalculate(Main main){
         if(newWindow){
-            // TODO - start a calculator in a new Window
+            try {
+                Runtime.getRuntime().exec("cmd /c start C:/Users/bilmu/Desktop/calcTest.bat");
+            }catch (IOException ioe){
+                ioe.printStackTrace();
+            }
         } else if (problem != null) {
             Calculator calc = new Calculator(main);
             main.printInfo("Solution: " + calc.calculate(problem));
