@@ -57,6 +57,8 @@ public class Main {
     private boolean searchNote;
     @Parameter(names = "alarm", description = "creates an alarm for the time entered")
     private boolean alarm;
+    @Parameter(names = "calculate", description = "creates an alarm for the time entered")
+    private boolean calculate;
     @Parameter(names = {"toggleDebug", "debug"}, description = "changes between debug and normal mode")
     private boolean toggleDebug;
     @Parameter(names = "logout", description = "logs the user out")
@@ -110,6 +112,11 @@ public class Main {
     private String alarmMessage;
     @Parameter(names = {"--relativeTime", "-rT"})
     private String relativeTime;
+    @Parameter(names = {"--problem", "-p"})
+    private String problem;
+    @Parameter(names = {"--newWindow", "-nW"})
+    private boolean newWindow;
+
 
     /**
      * Main function with the J-console input functionality <br>
@@ -380,6 +387,7 @@ public class Main {
         alarm = false;
         toggleDebug = false;
         logout = false;
+        calculate = false;
         // -------+
         iName = null;
         sName = null;
@@ -405,6 +413,8 @@ public class Main {
         alarmMessage = null;
         relativeTime = null;
         registration = false;
+        problem = null;
+        newWindow = false;
     }
 
     /**
@@ -1147,10 +1157,23 @@ public class Main {
             callSearchNote(main);
         else if (alarm)
             callAlarm(main);
+        else if (calculate)
+            callCalculate(main);
         else if (toggleDebug)
             toggleDebug(main);
         else if (logout)
             logout(main);
+    }
+
+    private void callCalculate(Main main){
+        if(newWindow){
+            // TODO - start a calculator in a new Window
+        } else if (problem != null) {
+            Calculator calc = new Calculator(main);
+            main.printInfo("Solution: " + calc.calculate(problem));
+        } else{
+            main.printError("No parameter entered. Use -nW parameter to open the calculator up in a new window or -p [problem] to only calculate one problem");
+        }
     }
 
     private void logout(Main main) {
