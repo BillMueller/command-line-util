@@ -126,7 +126,7 @@ public class Main {
      * After getting the input it will use JController to handle the input and it
      * will call run() function to call the needed functions
      */
-    public void main(boolean calculate) {
+    public void main() {
         if (operatingSystem.split(" ")[0].equals("Windows")) {
             setupDir = System.getenv().get("APPDATA") + "/jCommander";
         } else if (operatingSystem.equals("Linux")) {
