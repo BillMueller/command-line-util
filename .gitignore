@@ -4,6 +4,7 @@
 .settings/
 
 # Intellij
+!testcertificate.crt
 .idea/
 *.iml
 *.iws
