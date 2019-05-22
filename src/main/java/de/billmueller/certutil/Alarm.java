@@ -38,8 +38,8 @@ public class Alarm implements Runnable {
                 Thread.sleep(1000);
                 //TODO add sound
             }
-            main.printAlarm(message==null ? "Alarm" : message);
-        }catch (InterruptedException ire){
+            main.printAlarm(message == null ? "Alarm" : message);
+        } catch (InterruptedException ire) {
             main.printError("the alarm thread got interrupted");
             main.printDebug("error message: " + ire.getMessage());
         }

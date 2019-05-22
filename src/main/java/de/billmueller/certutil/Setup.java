@@ -55,10 +55,10 @@ public class Setup {
     }
 
     public void copy(Main main, String destination, String fileName) {
-        try (InputStream source = getClass().getClassLoader().getResourceAsStream(fileName)){
+        try (InputStream source = getClass().getClassLoader().getResourceAsStream(fileName)) {
             main.printDebug("Copying " + source + " to " + destination);
             Files.copy(source, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             main.printError("Failed to set up users.txt file");
             main.printDebug(ioe.getMessage());
         }

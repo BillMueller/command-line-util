@@ -14,7 +14,7 @@ public class Start {
         if (args.length == 0) {
             Main main = new Main();
             main.main(false);
-        } else if (args[0].equals("calculator")){
+        } else if (args[0].equals("calculator")) {
             System.out.println("opening calculator");
             Main main = new Main();
             main.main(true);
