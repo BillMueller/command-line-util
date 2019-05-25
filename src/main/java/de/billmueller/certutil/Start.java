@@ -6,8 +6,9 @@ import java.util.List;
 
 public class Start {
     public static void main(String[] args) {
-        Main main = new Main();
-        main.main();
+//        Main main = new Main();
+//        main.main();
+
 //		main.debug = true;
 //		new Setup().start(main, true);
 
@@ -22,10 +23,10 @@ public class Start {
 //            new Main().printError("Argument " + args[0] + "isn't valid");
 //        }
 
-//        Main main = new Main();
-//        main.debug = true;
-//        Calculator calc = new Calculator(main);
-//        main.printInfo("Solution: " + calc.calculate("6*8+3/7"));
+        Main main = new Main();
+        main.debug = true;
+        Calculator calc = new Calculator(main);
+        main.printInfo("Solution: " + calc.calculate("5*(3+7*(6-3))"));
 
 //        for(int i = 0; i <= 10000; i++){
 //            System.out.println((char) i);

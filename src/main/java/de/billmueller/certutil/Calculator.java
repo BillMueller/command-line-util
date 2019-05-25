@@ -11,10 +11,24 @@ public class Calculator {
         if (!problem.contains("(")) {
             return findOperator(problem);
         } else {
-
+            return findOperator(removeBrackets(problem));
         }
-        main.printError("The calculation contains not allowed Characters");
-        return 0;
+//        main.printError("The calculation contains not allowed Characters");
+//        return 0;
+    }
+
+    private String removeBrackets(String problem) {
+        main.printDebug("removing brackets, problem: " + problem);
+        if(!problem.contains("(")){
+            return  problem;
+        }
+        int openBracketPosition = problem.indexOf("(");
+        int closeBracketPosition = problem.indexOf(")");
+        String betweenBrackets = problem.substring(openBracketPosition + 1, closeBracketPosition);
+        while (betweenBrackets.contains("(")) {
+            betweenBrackets = problem.substring(betweenBrackets.indexOf("(")+1, closeBracketPosition);
+        }
+        return removeBrackets(problem.replace("(" + betweenBrackets + ")", Double.toString(findOperator(betweenBrackets))));
     }
 
     private double findOperator(String problem) {
@@ -64,9 +78,9 @@ public class Calculator {
         boolean firstRun = true;
         for (String i : splitProblem) {
             main.printDebug(returnValue + ";" + findOperator(i) + ";" + operatorID + ";" + i);
-            if(!firstRun) {
+            if (!firstRun) {
                 returnValue = simpleCalculation(returnValue, findOperator(i), operatorID);
-            }else{
+            } else {
                 returnValue = findOperator(i);
                 firstRun = false;
             }
