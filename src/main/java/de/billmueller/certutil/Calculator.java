@@ -8,6 +8,7 @@ public class Calculator {
     }
 
     public double calculate(String problem) {
+        problem = problem.replace(" ", "");
         if (!problem.contains("(")) {
             return findOperator(problem);
         } else {
@@ -38,7 +39,7 @@ public class Calculator {
             return divideIntoSimpleCalculations(problem, 0);
         } else if (problem.contains("-")) {
             return divideIntoSimpleCalculations(problem, 1);
-        } else if (problem.contains("*")) {
+        } else if (problem.contains("*")&& !problem.contains("**")) {
             return divideIntoSimpleCalculations(problem, 2);
         } else if (problem.contains("/")) {
             return divideIntoSimpleCalculations(problem, 3);
@@ -48,7 +49,7 @@ public class Calculator {
             try {
                 returnValue = Double.parseDouble(problem);
             } catch (Exception e) {
-                main.printError("Error with parsing to int");
+                main.printError("The entered calculation contains not allowed characters");
                 main.printDebug(e.toString());
             }
         }

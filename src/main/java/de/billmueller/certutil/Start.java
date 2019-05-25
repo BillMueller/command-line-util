@@ -1,9 +1,5 @@
 package de.billmueller.certutil;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Start {
     public static void main(String[] args) {
 //        Main main = new Main();
@@ -12,21 +8,23 @@ public class Start {
 //		main.debug = true;
 //		new Setup().start(main, true);
 
-//        if (args.length == 0) {
-//            Main main = new Main();
-//            main.main(false);
-//        } else if (args[0].equals("calculator")) {
-//            System.out.println("opening calculator");
-//            Main main = new Main();
-//            main.main(true);
-//        } else {
-//            new Main().printError("Argument " + args[0] + "isn't valid");
-//        }
+        if (args.length == 0) {
+            Main main = new Main();
+            main.main();
+        } else if (args[0].equals("calculator")){
+            Main main = new Main();
+            main.style = 5;
+            main.debug = false;
+            VisualCalculator vc = new VisualCalculator(main);
+            vc.showCalculator();
+        } else {
+            new Main().printError("Argument " + args[0] + "isn't valid");
+        }
 
-        Main main = new Main();
-        main.debug = true;
-        Calculator calc = new Calculator(main);
-        main.printInfo("Solution: " + calc.calculate("5*(3+7*(6-3))"));
+//        Main main = new Main();
+//        main.debug = true;
+//        Calculator calc = new Calculator(main);
+//        main.printInfo("Solution: " + calc.calculate("5*(3+7*(6-3))"));
 
 //        for(int i = 0; i <= 10000; i++){
 //            System.out.println((char) i);

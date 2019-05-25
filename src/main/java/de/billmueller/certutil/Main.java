@@ -17,7 +17,7 @@ public class Main {
     private String ANSI_OUTPUT = "\u001B[94m";
     private String ANSI_DEBUG = "\u001B[36m";
 
-    private int style = 0;
+    public int style = 0;
     public boolean debug = false;
     private String pFile;
     private int permissionLevel = 0;
@@ -505,6 +505,24 @@ public class Main {
             System.out.println("[" + ANSI_ERROR + "-" + ANSI_RESET + "] " + msg);
         else
             System.out.println("[-] " + msg);
+    }
+
+    public void printCalculator(int line) {
+        if (style != 1)
+            System.out.print("[" + ANSI_INPUT + "%" + line + ANSI_RESET + "> ");
+        else
+            System.out.print("[%" + line + "> ");
+    }
+
+    public void printSolution(double solution) {
+        if (style == 0 || style == 2)
+            System.out.println("[" + ANSI_OUTPUT + "SOLUTION: " + ANSI_RESET + "] " + solution);
+        else if (style == 1)
+            System.out.println("[SOLUTION] " + solution);
+        else if (style == 3)
+            System.out.println("[" + ANSI_OUTPUT + "S" + ANSI_RESET + "] " + solution);
+        else
+            System.out.println("[" + ANSI_OUTPUT + "=" + ANSI_RESET + "] " + solution);
     }
 
     /**
